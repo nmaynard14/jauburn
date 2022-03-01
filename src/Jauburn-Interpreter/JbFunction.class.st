@@ -28,19 +28,20 @@ JbFunction >> body: anObject [
 
 { #category : #api }
 JbFunction >> call: arguments in: callEnvironment [
-	"You need to implement this method!  arguments will contain the arguments to pass to this function and callEnvironment will contain the environment in place when this function was called."
+
+	environment := JbEnvironment
+		               newFromKeys: (self parameters collect: [ :e | e identifier])
+		               andValues: (arguments collect: [ :e | e evaluateIn: callEnvironment ]).
+	environment outerEnvironment: callEnvironment.
 	
-	self shouldBeImplemented 
+	environment at: 'return' put: nil.
+
+	^self parseBody: environment
 ]
 
 { #category : #accessing }
 JbFunction >> environment [
 	^ environment
-]
-
-{ #category : #accessing }
-JbFunction >> environment: anObject [
-	environment := anObject
 ]
 
 { #category : #accessing }
@@ -51,4 +52,24 @@ JbFunction >> parameters [
 { #category : #accessing }
 JbFunction >> parameters: anObject [
 	parameters := anObject
+]
+
+{ #category : #parsing }
+JbFunction >> parseBody:  anEnvironment [ 
+
+	| nBR |
+
+	body do: [ :e | 
+		(e className includesSubstring: 'Statement')
+			ifTrue: [ (e className = 'JbReturnStatementNode') 
+				ifTrue: [ ^ e executeIn: anEnvironment  ]
+				ifFalse: [ e executeIn: anEnvironment ] ].
+		(e className includesSubstring: 'Expression')
+			ifTrue: [ e evaluateIn: anEnvironment ].
+		((e className = 'JbIfElseNode') or: (e className = 'JbIfNode'))
+			ifTrue: [ nBR := e executeIn: anEnvironment.
+						 nBR notNil ifTrue: [ ^nBR ] ].
+		(e className = 'JbWhileLoopNode')
+			ifTrue: [ e executeIn: anEnvironment ]].
+		^nil.
 ]

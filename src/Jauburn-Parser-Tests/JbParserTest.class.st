@@ -286,3 +286,21 @@ JbParserTest >> testVariableDeclarationStatement [
 	stmt := self parse: 'var monkey = 37*x;' rule: #variableDeclarationStatement.
 	self assert: stmt identifier equals: 'monkey'
 ]
+
+{ #category : #'tests-program' }
+JbParserTest >> testWhileInProgram [ 
+
+	| pgm |
+	pgm := self parse: 'var x = function(x) { var z = 22; var y = z + 1; return x*z; };
+var lmnop123 = 9 * 2 + 44; var z = x(99); while (true) { z = z + 1; }'.
+	self assert: pgm statements size equals: 4.
+	self assert: pgm statements fourth className equals: 'JbWhileLoopNode'.
+]
+
+{ #category : #'tests-statements' }
+JbParserTest >> testWhileStatement [
+
+	| stmt |
+	stmt := self parse: 'while (x <= 10) {sum = sum + x; x = x + 1;}' rule: #whileStatement.
+	self assert: stmt className equals: 'JbWhileLoopNode'.
+]
